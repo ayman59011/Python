@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ظل المدقق - Shadow Auditor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="orbit" id="orbit"></div>
+    <div class="container">
+        <header>
+            <h1>⚡ المدقق الظليل</h1>
+            <p>ارفع مشروعك <span class="highlight">(ZIP)</span> لتمزيق الثغرات بأمر الذكاء الخارق</p>
+        </header>
+
+        <div class="upload-zone" id="dropZone">
+            <div class="icon">📁</div>
+            <h3>اسحب ملفك أو انقر للرفع</h3>
+            <p style="color: #8892b0; font-size: 0.9rem;">يدعم .zip حتى 50MB</p>
+            <input type="file" id="fileInput" accept=".zip" hidden>
+            <button class="glow-btn" id="uploadBtn">اختر الملف</button>
+        </div>
+
+        <div id="fileInfo" class="file-info" style="display: none;">
+            <span id="fileName"></span>
+            <span id="fileSize"></span>
+        </div>
+
+        <div id="loader" class="loader-container" style="display: none;">
+            <div class="spinner"></div>
+            <p id="progressText">جاري تمزيق الملفات... 0/%</p>
+            <div class="progress-bar"><div id="progressFill" style="width: 0%;"></div></div>
+        </div>
+
+        <div id="results" class="results-container" style="display: none;">
+            <div class="stats">
+                <div class="stat-card"><span>📂</span> <span id="totalFiles">0</span></div>
+                <div class="stat-card"><span>🔍</span> <span id="analyzedFiles">0</span></div>
+                <div class="stat-card"><span>🏆</span> <span id="overallScore">0</span>%</div>
+            </div>
+            <div id="issuesList" class="issues-list"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+              </html>
