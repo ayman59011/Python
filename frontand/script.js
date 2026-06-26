@@ -48,7 +48,7 @@ async function uploadFile(file) {
     progressText.textContent = 'جاري رفع الملف...';
 
     try {
-        const response = await fetch('http://localhost:5000/upload', {
+        const response = await fetch('/upload', {
             method: 'POST',
             body: formData
         });
