@@ -3,22 +3,24 @@ import json
 import zipfile
 import tempfile
 import shutil
-from flask import Flask, request, jsonify
+import time
+import re
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 from dotenv import load_dotenv
-import time
 
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # يظل مفعلاً للاحتياط، لكننا الآن نخدم الواجهة من نفس الدومين
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+# ==================== إعداد مسار الواجهة الأمامية ====================
+# نفترض أن مجلد 'frontend' موجود في نفس مستوى 'backend'
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '../frontend')
+
+# ==================== تحميل System Prompt ====================
 SYSTEM_PROMPT = ""
-
-# تحميل الـ system prompt من الملف
 def load_system_prompt():
     global SYSTEM_PROMPT
     try:
@@ -29,7 +31,11 @@ def load_system_prompt():
 
 load_system_prompt()
 
-# امتدادات الملفات النصية المسموح بفحصها
+# ==================== إعدادات OpenRouter ====================
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+# ==================== دوال مساعدة للتحليل ====================
 TEXT_EXTENSIONS = {
     '.py', '.js', '.html', '.css', '.json', '.xml', '.yaml', '.yml',
     '.txt', '.md', '.sql', '.sh', '.bat', '.ps1', '.ts', '.jsx', '.tsx',
@@ -55,7 +61,6 @@ def analyze_file_with_ai(filename, content):
     if content is None:
         return {"file": filename, "summary": "ملف ثنائي أو غير قابل للقراءة", "issues": [], "score": 0}
     
-    # قص المحتوى إذا كان طويلاً جداً (لحماية التوكنات)
     if len(content) > 15000:
         content = content[:15000] + "\n\n... [مقتطع لطول الملف]"
 
@@ -67,7 +72,7 @@ def analyze_file_with_ai(filename, content):
     }
 
     payload = {
-        "model": "mistralai/mistral-large-2407",  # قوي وسريع للتجربة
+        "model": "mistralai/mistral-large-2407",
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"قم بتحليل هذا الملف بدقة: {filename}\n\nمحتوى الملف:\n```\n{content}\n```"}
@@ -81,12 +86,9 @@ def analyze_file_with_ai(filename, content):
         if response.status_code == 200:
             data = response.json()
             ai_message = data['choices'][0]['message']['content']
-            # محاولة استخراج JSON من النص (أحياناً يحط markdown)
             try:
                 return json.loads(ai_message)
             except:
-                # محاولة تنظيف النص
-                import re
                 json_match = re.search(r'\{.*\}', ai_message, re.DOTALL)
                 if json_match:
                     return json.loads(json_match.group())
@@ -97,6 +99,23 @@ def analyze_file_with_ai(filename, content):
     except Exception as e:
         return {"file": filename, "summary": f"استثناء: {str(e)}", "issues": [], "score": 0}
 
+# ==================== نقاط النهاية (Endpoints) ====================
+
+# 1. خدمة الواجهة الأمامية (الصفحة الرئيسية)
+@app.route('/')
+def serve_index():
+    return send_from_directory(FRONTEND_DIR, 'index.html')
+
+# 2. خدمة الملفات الثابتة (CSS, JS, صور...)
+@app.route('/<path:path>')
+def serve_static_files(path):
+    # التأكد من أن الملف موجود فعلياً في مجلد frontend
+    if os.path.exists(os.path.join(FRONTEND_DIR, path)):
+        return send_from_directory(FRONTEND_DIR, path)
+    # إذا لم يكن موجوداً (مثلاً مسار SPA)، نعيد index.html لتتفادى الخطأ 404
+    return send_from_directory(FRONTEND_DIR, 'index.html')
+
+# 3. نقطة رفع الملفات وتحليلها (الوظيفة الأساسية)
 @app.route('/upload', methods=['POST'])
 def upload_zip():
     if 'file' not in request.files:
@@ -106,7 +125,6 @@ def upload_zip():
     if file.filename == '':
         return jsonify({"error": "اسم الملف فارغ"}), 400
 
-    # إنشاء مجلد مؤقت
     temp_dir = tempfile.mkdtemp()
     zip_path = os.path.join(temp_dir, file.filename)
     file.save(zip_path)
@@ -119,9 +137,7 @@ def upload_zip():
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(temp_dir)
         
-        # التجوال في الملفات المستخرجة
         for root, dirs, files in os.walk(temp_dir):
-            # تخطي مجلدات النظام والمجلدات المخفية
             dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['__pycache__', 'node_modules']]
             for f in files:
                 if f.startswith('.') or f in ['package-lock.json']:
@@ -135,7 +151,7 @@ def upload_zip():
                     content = read_file_safely(file_path)
                     result = analyze_file_with_ai(relative_path, content)
                     results.append(result)
-                    time.sleep(0.5)  # تجنب حد الـ rate limit
+                    time.sleep(0.5)
                 else:
                     results.append({
                         "file": relative_path,
@@ -147,10 +163,8 @@ def upload_zip():
     except Exception as e:
         return jsonify({"error": f"حدث خطأ أثناء فك الضغط: {str(e)}"}), 500
     finally:
-        # تنظيف المجلد المؤقت
         shutil.rmtree(temp_dir, ignore_errors=True)
 
-    # حساب المتوسط العام
     total_score = 0
     valid_scores = 0
     for r in results:
@@ -167,5 +181,8 @@ def upload_zip():
         "details": results
     })
 
+# ==================== تشغيل الخادم ====================
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    # Render سيحدد المنفذ تلقائياً عبر المتغير البيئي PORT
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
