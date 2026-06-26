@@ -2,7 +2,7 @@ services:
   - type: web
     name: shadow-code-auditor
     env: python
-    buildCommand: pip install -r backend/requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: python backend/app.py
     envVars:
       - key: OPENROUTER_API_KEY
