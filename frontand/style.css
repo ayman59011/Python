@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #0a0a0f;
+    color: #ccd6f6;
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+}
+.orbit {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(100, 255, 218, 0.03) 0%, transparent 70%);
+    z-index: 0;
+    animation: rotate 60s linear infinite;
+}
+@keyframes rotate { 100% { transform: rotate(360deg); } }
+
+.container {
+    position: relative;
+    z-index: 1;
+    width: 90%;
+    max-width: 1100px;
+    padding: 2rem;
+    background: rgba(16, 16, 24, 0.8);
+    backdrop-filter: blur(20px);
+    border-radius: 32px;
+    border: 1px solid rgba(100, 255, 218, 0.15);
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+}
+
+header h1 { font-size: 2.5rem; font-weight: 700; background: linear-gradient(135deg, #64ffda, #48c9b0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.highlight { color: #64ffda; -webkit-text-fill-color: #64ffda; }
+
+.upload-zone {
+    margin: 2rem 0;
+    padding: 3rem;
+    border: 2px dashed rgba(100, 255, 218, 0.3);
+    border-radius: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(100, 255, 218, 0.02);
+}
+.upload-zone:hover, .drag-over { border-color: #64ffda; background: rgba(100, 255, 218, 0.08); }
+.icon { font-size: 4rem; margin-bottom: 1rem; }
+.glow-btn {
+    margin-top: 1rem;
+    padding: 12px 32px;
+    background: #64ffda;
+    color: #0a0a0f;
+    border: none;
+    border-radius: 40px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 20px rgba(100, 255, 218, 0.2);
+}
+.glow-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(100, 255, 218, 0.4); }
+
+.file-info { background: rgba(255,255,255,0.05); padding: 0.8rem 1.5rem; border-radius: 40px; display: inline-block; margin: 0.5rem 0; }
+
+.loader-container { margin: 2rem 0; text-align: center; }
+.spinner { width: 50px; height: 50px; border: 3px solid rgba(100, 255, 218, 0.1); border-top: 3px solid #64ffda; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 0.5rem; }
+#progressFill { height: 100%; background: linear-gradient(90deg, #64ffda, #00b4d8); width: 0%; transition: width 0.3s; }
+
+.stats { display: flex; gap: 1.5rem; margin: 1.5rem 0; flex-wrap: wrap; }
+.stat-card { background: rgba(255,255,255,0.03); padding: 1rem 2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); flex: 1; text-align: center; font-size: 1.5rem; }
+.stat-card span:last-child { font-weight: 700; color: #64ffda; }
+
+.issues-list { display: flex; flex-direction: column; gap: 1rem; max-height: 600px; overflow-y: auto; padding-right: 0.5rem; }
+.issue-card {
+    background: rgba(255,255,255,0.02);
+    border-radius: 16px;
+    padding: 1.2rem;
+    border-right: 4px solid #64ffda;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.issue-card .file-path { font-size: 0.9rem; color: #64ffda; word-break: break-all; }
+.issue-card .summary { font-size: 0.95rem; margin: 0.3rem 0; color: #a8b2d1; }
+.issue-item { background: rgba(255,0,0,0.03); padding: 0.8rem; margin-top: 0.5rem; border-radius: 8px; border-left: 2px solid #ff6b6b; }
+.issue-item .severity-high { color: #ff6b6b; font-weight: 700; }
+.issue-item .severity-medium { color: #feca57; font-weight: 700; }
+.issue-item .severity-low { color: #48dbfb; font-weight: 700; }
+.issue-item .solution { color: #a8b2d1; font-size: 0.85rem; margin-top: 0.2rem; padding: 0.3rem 0.8rem; background: rgba(0,0,0,0.3); border-radius: 6px; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0f; }
+::-webkit-scrollbar-thumb { background: #64ffda; border-radius: 10px; }
